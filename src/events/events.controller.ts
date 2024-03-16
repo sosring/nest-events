@@ -5,8 +5,10 @@ import {
   Get,
   HttpCode,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, MoreThan, Repository } from 'typeorm';
@@ -22,12 +24,16 @@ export class EventsController {
   ) {}
 
   @Get()
-  async findAll() {
-    return await this.repository.find();
+  async findAll(@Query('search') search = '') {
+    return await this.repository.find({
+      where: {
+        name: Like(`%${search}%`),
+      },
+    });
   }
 
   @Get('/practice')
-  async practice() {
+  async practice(@Query('search') search: string) {
     return await this.repository.find({
       where: [
         // filtering
@@ -36,7 +42,7 @@ export class EventsController {
           when: MoreThan(new Date('2021-02-12T13:00:00')),
         },
         {
-          description: Like('%meet%'),
+          name: Like(`%${search}%`),
         },
       ],
       select: ['id', 'name', 'description', 'when'], // field limiting
@@ -50,7 +56,7 @@ export class EventsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id) {
+  async findOne(@Param('id', ParseIntPipe) id) {
     return await this.repository.findOneBy({ id });
   }
 
@@ -63,7 +69,7 @@ export class EventsController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id, @Body() input: UpdateEventDto) {
+  async update(@Param('id', ParseIntPipe) id, @Body() input: UpdateEventDto) {
     const event = await this.repository.findOneBy({ id });
 
     return await this.repository.save({
@@ -75,7 +81,7 @@ export class EventsController {
 
   @Delete(':id')
   @HttpCode(204)
-  async remove(@Param('id') id) {
+  async remove(@Param('id', ParseIntPipe) id) {
     const event = await this.repository.findOneBy({ id });
     await this.repository.remove(event);
   }

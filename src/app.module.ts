@@ -1,21 +1,23 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { EventsController } from './events.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import 'dotenv/config';
 
 import ormConfig from './config/orm.config';
-import { Event } from './event.entity';
+import { EventsModule } from './events/events.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRootAsync({
       useFactory: ormConfig,
     }),
-    TypeOrmModule.forFeature([Event]),
+    EventsModule,
   ],
   providers: [AppService],
-  controllers: [AppController, EventsController],
+  controllers: [AppController],
 })
 export class AppModule {}
